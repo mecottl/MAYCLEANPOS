@@ -10,7 +10,7 @@ const router = Router();
 
 // GET: Obtener pedidos para el dashboard (Ruta Protegida)
 router.get('/dashboard', verificarToken, getPedidosDashboard);
-router.get('/historial', verificarToken, getPedidosDashboard);
+router.get('/historial', verificarToken, getHistorialPedidos);
 router.post('/', verificarToken, crearPedido);
 router.put('/:folio/estado', verificarToken, actualizarEstadoPedido);
 

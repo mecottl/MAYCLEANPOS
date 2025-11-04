@@ -21,7 +21,6 @@ app.get('/', (req, res) => {
 });
 
 app.get('/ping', async (req, res) => {
-  // ... (código de ping) ...
 });
 
 app.use('/api/auth', authRoutes);

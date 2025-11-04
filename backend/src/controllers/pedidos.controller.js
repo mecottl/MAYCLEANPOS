@@ -129,25 +129,41 @@ export const actualizarEstadoPedido = async (req, res) => {
 
 /**
  * Obtiene el historial de pedidos (Entregados y Cancelados).
- */
-export const getHistorialPedidos = async (req, res) => {
+ */export const getHistorialPedidos = async (req, res) => {
   try {
+    // --- LÓGICA DE FILTRO DE FECHA ---
+    const { rango } = req.query; // Ej: ?rango=30d, 90d, 365d
+    let sqlFiltroFecha = ""; // Por defecto, no hay filtro
+
+    if (rango) {
+      // Usamos INTERVAL para restar tiempo a la fecha actual
+      // NOW()::date - '1 day'::interval = 'ayer'
+      sqlFiltroFecha = `AND p.fecha_entrega >= (NOW() - INTERVAL '${rango}')`;
+    }
+    // --- FIN DE LÓGICA DE FILTRO ---
+
     const pedidosHistorial = await pool.query(
       `SELECT 
-         p.folio, 
-         p.precio_total, 
-         p.estado_flujo, 
+         p.folio,
+         p.precio_servicio,
+         p.tarifa_domicilio,
+         p.precio_total,
+         p.estado_flujo,
+         p.estado_pago,
          p.fecha_entrega,
          p.fecha_creacion,
+         p.es_domicilio,
          c.nombre AS nombre_cliente,
          c.telefono AS telefono_cliente
-       FROM pedidos p 
+       FROM pedidos p -- Corregido a minúsculas
        JOIN clientes c ON p.cliente_id = c.id
-       WHERE p.estado_flujo IN ('Entregado', 'Cancelado')
-       ORDER BY p.fecha_entrega DESC, p.fecha_creacion DESC
-       `
+       WHERE p.estado_flujo IN ('Entregado', 'Cancelado') -- ¡ESTA ES LA CORRECCIÓN!
+       ${sqlFiltroFecha} -- ¡AQUÍ SE APLICA EL FILTRO DE FECHA!
+       ORDER BY p.fecha_entrega DESC, p.fecha_creacion DESC`
     );
+    
     res.status(200).json(pedidosHistorial.rows);
+
   } catch (error) {
     console.error('Error al obtener historial de pedidos:', error);
     res.status(500).json({ message: 'Error interno del servidor' });

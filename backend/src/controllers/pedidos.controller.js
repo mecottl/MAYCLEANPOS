@@ -139,7 +139,7 @@ export const getHistorialPedidos = async (req, res) => {
          p.estado_flujo, 
          p.fecha_entrega,
          p.fecha_creacion,
-         c.nombre AS nombre_cliente
+         c.nombre AS nombre_cliente,
          c.telefono AS telefono_cliente
        FROM pedidos p 
        JOIN clientes c ON p.cliente_id = c.id

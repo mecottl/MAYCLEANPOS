@@ -1,6 +1,7 @@
+// backend/src/index.js
 import 'dotenv/config'; 
 import express from 'express';
-import cors from 'cors';
+import cors from 'cors'; // <-- Asegúrate de que esto esté importado
 import pool from './config/db.config.js'; 
 import authRoutes from './routes/auth.routes.js';
 import clientesRoutes from './routes/clientes.routes.js';
@@ -9,27 +10,18 @@ import pedidosRoutes from './routes/pedidos.routes.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares
-app.use(cors()); // Permite peticiones de otros dominios
-app.use(express.json()); // Permite a Express entender JSON
+// --- MIDDLEWARES (¡ESTE ORDEN ES VITAL!) ---
+app.use(cors()); // 1. Habilita CORS para todas las peticiones
+app.use(express.json()); // 2. Habilita la lectura de JSON
+// ------------------------------------------
 
+// --- RUTAS (DEBEN IR DESPUÉS DE LOS MIDDLEWARES) ---
 app.get('/', (req, res) => {
   res.json({ message: '¡API de MAYACLEANPOS funcionando en ESM!' });
 });
 
-// Ruta de prueba para la base de datos
 app.get('/ping', async (req, res) => {
-  try {
-    // Hacemos una consulta simple a Neon
-    const result = await pool.query('SELECT NOW()');
-    res.json({
-      message: 'Conexión a Neon exitosa ✅',
-      timestamp: result.rows[0].now
-    });
-  } catch (error) {
-    console.error('Error conectando a la base de datos:', error);
-    res.status(500).json({ message: 'Error al conectar a la DB' });
-  }
+  // ... (código de ping) ...
 });
 
 app.use('/api/auth', authRoutes);
@@ -38,5 +30,5 @@ app.use('/api/pedidos', pedidosRoutes);
 
 // Iniciar el servidor
 app.listen(PORT, () => {
-  console.log(` Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`🚀 Servidor Mayaclean corriendo en http://localhost:${PORT}`);
 });

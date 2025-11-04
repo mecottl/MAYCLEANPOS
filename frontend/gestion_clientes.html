@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LavanderPOS - Gestión de Clientes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="dashboard-page">
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Mayaclean</h2>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-link" id="nav-dashboard">Dashboard</a>
+        <a href="new_order.html" class="nav-link" id="nav-crear-orden">Crear Orden</a>
+        <a href="gestion_clientes.html" class="nav-link" id="nav-clientes">Gestion de Clientes</a>
+        <a href="historial_pedidos.html" class="nav-link" id="nav-historial">Historial de Pedidos</a>
+        <a href="#" class="nav-link" id="nav-contabilidad">Contabilidad</a>
+        <a href="#" class="nav-link logout">Cerrar Sesión</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="content-header">
+        <h1>Gestión de Clientes</h1>
+      </header>
+
+      <!-- Search Bar -->
+      <div class="action-bar">
+        <input type="search" id="buscar-cliente" class="search-input"
+          placeholder="Buscar cliente por nombre o teléfono...">
+      </div>
+
+      <!-- Table Container -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Teléfono</th>
+              <th>Dirección</th>
+              <th>Pedidos Totales</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="lista-clientes-body">
+            <tr>
+              <td>Juan Pérez</td>
+              <td>+34 612 345 678</td>
+              <td>Calle Principal 123, Madrid</td>
+              <td>5</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  </div>
+
+  <!-- Modal Backdrop (Fondo oscuro) -->
+<div id="modal-backdrop" class="oculto"></div>
+
+<!-- Modal -->
+<div id="edit-modal" class="modal oculto">
+  <div class="modal-content">
+    <!-- Encabezado del modal -->
+    <div class="modal-header">
+      <h2>Editar Cliente</h2>
+      <button id="modal-close-btn" class="modal-close-btn">&times;</button>
+    </div>
+
+    <!-- Cuerpo del modal -->
+    <div class="modal-body">
+      <form id="edit-form">
+        <div class="form-group">
+          <label for="modal-nombre">Nombre</label>
+          <input type="text" id="modal-nombre" name="nombre" required>
+        </div>
+
+        <div class="form-group">
+          <label for="modal-telefono">Teléfono</label>
+          <input type="tel" id="modal-telefono" name="telefono" required>
+        </div>
+
+        <div class="form-group">
+          <label for="modal-direccion">Dirección</label>
+          <input type="text" id="modal-direccion" name="direccion" required>
+        </div>
+      </form>
+    </div>
+
+    <!-- Pie del modal -->
+    <div class="modal-footer">
+      <button id="modal-cancel-btn" class="btn-secondary">Cancelar</button>
+      <button id="modal-save-btn" class="btn-primary">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+
+  <script src="./src/services/api.js" type="module" defer></script>
+  <script src="./src/gestion_clientes.js" type="module" defer></script> 
+</body>
+</html>

@@ -352,6 +352,418 @@ body {
 }
 
 /* ============================================
+   NEW ORDER PAGE
+   ============================================ */
+
+/* Added styles for the new order form and its sections */
+
+.form-container {
+  padding: 32px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.orden-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.form-section {
+  background-color: var(--bg-white);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.section-title.warning-title {
+  color: var(--accent-yellow);
+  border-bottom-color: var(--accent-yellow);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: flex-end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-dark);
+}
+
+.form-group input {
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(26, 58, 82, 0.1);
+}
+
+.form-group input:disabled {
+  background-color: var(--bg-light);
+  cursor: not-allowed;
+  color: var(--text-light);
+}
+
+.form-button-group {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.btn-secondary {
+  padding: 12px 24px;
+  background-color: var(--text-light);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--text-dark);
+}
+
+.btn-full {
+  width: 100%;
+}
+
+/* Cliente Info Container */
+.cliente-info-container {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: var(--bg-light);
+  border-radius: 6px;
+  border-left: 4px solid var(--accent-green);
+}
+
+.cliente-info-container.oculto {
+  display: none;
+}
+
+.cliente-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.info-label {
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 14px;
+}
+
+.info-value {
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+/* Nuevo Cliente Section */
+.nuevo-cliente-section {
+  border: 2px dashed var(--accent-yellow);
+  background-color: rgba(245, 158, 11, 0.05);
+}
+
+.nuevo-cliente-section.oculto {
+  display: none;
+}
+
+/* Pedido Fieldset */
+.pedido-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pedido-fieldset:disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.precio-total-container {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px;
+  background-color: var(--bg-light);
+  border-radius: 6px;
+  border: 2px solid var(--border-color);
+}
+
+.precio-total {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+/* ============================================
+   TABLE STYLES
+   ============================================ */
+
+/* Added table container and data table styles */
+
+.table-container {
+  padding: 32px;
+  background-color: var(--bg-white);
+  margin: 24px 32px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.data-table thead {
+  background-color: var(--bg-light);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.data-table th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-dark);
+  white-space: nowrap;
+}
+
+.data-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+  background-color: var(--bg-light);
+}
+
+.data-table td {
+  padding: 16px;
+  color: var(--text-dark);
+}
+
+.data-table td:last-child {
+  text-align: center;
+}
+
+/* Estado Badges for History Table */
+.estado-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.estado-entregado {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--accent-green);
+}
+
+.estado-cancelado {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--accent-red);
+}
+
+/* Added search input styling */
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(26, 58, 82, 0.1);
+}
+
+/* ============================================
+   MODAL STYLES
+   ============================================ */
+
+/* Added modal backdrop and modal styling */
+
+.oculto {
+  display: none !important;
+}
+
+#modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  transition: opacity 0.3s ease;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--bg-white);
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  width: 100%;
+  max-width: 500px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-white);
+}
+
+.modal-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-body .form-group {
+  margin-bottom: 20px;
+}
+
+.modal-body .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 24px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-light);
+}
+
+.modal-footer .btn-primary,
+.modal-footer .btn-secondary {
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+/* Modal responsive */
+@media (max-width: 600px) {
+  .modal {
+    width: 90%;
+    max-width: none;
+    margin: 16px;
+  }
+
+  .modal-header {
+    padding: 16px;
+  }
+
+  .modal-header h2 {
+    font-size: 18px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-footer {
+    padding: 16px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-footer .btn-primary,
+  .modal-footer .btn-secondary {
+    width: 100%;
+  }
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 
@@ -419,6 +831,45 @@ body {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+
+  /* NEW ORDER PAGE - Responsive */
+  .form-container {
+    padding: 24px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+
+  .form-group input {
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  .precio-total {
+    font-size: 24px;
+  }
+
+  /* Updated table container for mobile */
+  .table-container {
+    padding: 16px;
+    margin: 16px 16px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  .search-input {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -449,5 +900,44 @@ body {
 
   .pedidos-lista {
     padding: 16px;
+  }
+
+  /* NEW ORDER PAGE - Responsive */
+  .form-container {
+    padding: 16px;
+  }
+
+  .form-section {
+    padding: 16px;
+  }
+
+  .form-button-group {
+    flex-direction: column;
+  }
+
+  .btn-secondary {
+    width: 100%;
+  }
+
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  /* Further reduced table padding for small screens */
+  .table-container {
+    padding: 12px;
+    margin: 12px 12px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px 6px;
+    font-size: 12px;
+  }
+
+  .data-table {
+    font-size: 12px;
   }
 }

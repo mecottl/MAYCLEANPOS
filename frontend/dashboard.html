@@ -4,42 +4,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LavanderPOS - Dashboard</title>
+  <title>MAYACLEAN POS - Dashboard</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 
 <body class="dashboard-page">
   <div class="dashboard-container">
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h2>LavanderPOS</h2>
+        <h2>Mayaclean</h2>
       </div>
-
+      
       <nav class="sidebar-nav">
-        <a href="#" class="nav-link active">Dashboard</a>
-        <a href="#" class="nav-link">Clientes</a>
-        <a href="#" class="nav-link">Contabilidad</a>
+        <a href="dashboard.html" class="nav-link" id="nav-dashboard">Dashboard</a>
+        <a href="new_order.html" class="nav-link" id="nav-crear-orden">Crear Orden</a>
+        <a href="gestion_clientes.html" class="nav-link" id="nav-clientes">Gestion de Clientes</a>
+        <a href="historial_pedidos.html" class="nav-link" id="nav-historial">Historial de Pedidos</a>
+        <a href="#" class="nav-link" id="nav-contabilidad">Contabilidad</a>
         <a href="#" class="nav-link logout">Cerrar Sesión</a>
       </nav>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
       <header class="content-header">
         <h1>Pedidos en Curso</h1>
       </header>
 
       <div class="action-bar">
-        <button class="btn-primary btn-lg">Crear Nueva Orden</button>
+        <button id="btn-crear-orden" class="btn-primary btn-lg">Crear Nueva Orden</button>
       </div>
 
       <div id="pedidos-lista" class="pedidos-lista">
-      </div>
+        </div>
+      
     </main>
   </div>
-  <script src="src/services/api.js" defer></script>
-  <script src="src/dashboard.js" defer></script>
+
+  <script src="./src/services/api.js" type="module" defer></script>
+  <script src="./src/dashboard.js" type="module" defer></script>
 </body>
 
 </html>

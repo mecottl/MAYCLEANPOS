@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mayaclean - Crear Nueva Orden</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="dashboard-page">
+  <div class="dashboard-container">
+    
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Mayaclean</h2>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-link" id="nav-dashboard">Dashboard</a>
+        <a href="new_order.html" class="nav-link active" id="nav-crear-orden">Crear Orden</a>
+        <a href="gestion_clientes.html" class="nav-link" id="nav-clientes">Gestion de Clientes</a>
+        <a href="historial_pedidos.html" class="nav-link" id="nav-historial">Historial de Pedidos</a>
+        <a href="#" class="nav-link" id="nav-contabilidad">Contabilidad</a>
+        <a href="#" class="nav-link logout">Cerrar Sesión</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="content-header">
+        <h1>Crear Nueva Orden</h1>
+      </header>
+
+      <div class="form-container">
+        <form class="orden-form">
+
+          <section class="form-section">
+            <h2 class="section-title">Buscar Cliente</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="telefono-buscar">Buscar por Teléfono</label>
+                <input type="tel" id="telefono-buscar" placeholder="Ingrese el teléfono del cliente" />
+              </div>
+              <div class="form-button-group">
+                <button type="button" class="btn-secondary">Buscar</button>
+                <button type="button" id="btn-mostrar-nuevo" class="btn-tertiary">Crear Nuevo</button>
+              </div>
+            </div>
+            
+            <div id="cliente-info-container" class="cliente-info-container oculto">
+              <div class="cliente-info-card">
+                  <div class="info-row">
+                      <span class="info-label">Nombre:</span>
+                      <span class="info-value" id="cliente-nombre"></span>
+                  </div>
+                  <div class="info-row">
+                      <span class="info-label">Teléfono:</span>
+                      <span class="info-value" id="cliente-telefono"></span>
+                  </div>
+                  <div class="info-row">
+                      <span class="info-label">Dirección:</span>
+                      <span class="info-value" id="cliente-direccion"></span>
+                  </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section nuevo-cliente-section oculto">
+            <h2 class="section-title warning-title">Cliente no encontrado. Registrar nuevo:</h2>
+            
+            <div class="form-group">
+                <label for="nombre-completo">Nombre Completo</label>
+                <input type="text" id="nombre-completo" placeholder="Ingrese el nombre completo del cliente" />
+            </div>
+            
+            <div class="form-group">
+                <label for="telefono-nuevo">Teléfono</label>
+                <input type="tel" id="telefono-nuevo" placeholder="Teléfono del cliente" />
+            </div>
+            
+            <div class="form-group">
+                <label for="direccion-cliente">Dirección (Opcional)</label>
+                <input type="text" id="direccion-cliente" placeholder="Dirección del cliente" />
+            </div>
+            
+            <button type="button" class="btn-secondary btn-full">Guardar Cliente</button>
+          </section>
+
+          <section class="form-section">
+            <h2 class="section-title">Detalles del Pedido</h2>
+
+            <fieldset class="pedido-fieldset" disabled>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="input-kilos">Kilos (kg) - ($15 por kg, min 5kg)</label>
+                  <input type="number" id="input-kilos" placeholder="5.0" min="5" step="0.1" value="5" />
+                </div>
+
+                <div class="form-group checkbox-group">
+                  <input type="checkbox" id="check-domicilio" />
+                  <label for="check-domicilio">Servicio a Domicilio (+$30.00)</label>
+                </div>
+              </div>
+
+              <div class="precio-total-container">
+                <h3 id="precio-total" class="precio-total">$0.00</h3>
+              </div>
+
+              <button type="submit" class="btn-primary btn-full">Crear Pedido</button>
+            </fieldset>
+          </section>
+
+        </form>
+      </div>
+    </main>
+  </div>
+  <script src="./src/services/api.js" type="module" defer></script>
+  <script src="./src/new_order.js" type="module" defer></script>
+</body>
+
+</html>

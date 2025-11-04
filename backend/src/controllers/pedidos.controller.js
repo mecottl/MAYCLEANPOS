@@ -74,21 +74,15 @@ export const crearPedido = async (req, res) => {
   }
 };
 
-// ... (tu función 'actualizarEstadoPedido' se queda igual) ...
-
 export const actualizarEstadoPedido = async (req, res) => {
   try {
-    // 1. Obtenemos el 'folio' de los parámetros de la URL
     const { folio } = req.params;
-    // 2. Obtenemos los estados que se quieren actualizar del body
     const { estado_flujo, estado_pago } = req.body;
 
     if (!estado_flujo && !estado_pago) {
-      return res.status(400).json({ message: 'Se requiere al menos un estado (estado_flujo o estado_pago) para actualizar' });
+      return res.status(400).json({ message: 'Se requiere al menos un estado para actualizar' });
     }
 
-    // 3. Construimos la consulta de actualización dinámicamente
-    // Esto nos permite actualizar solo uno o ambos estados
     const fields = [];
     const values = [];
     let paramIndex = 1;
@@ -96,21 +90,31 @@ export const actualizarEstadoPedido = async (req, res) => {
     if (estado_flujo) {
       fields.push(`estado_flujo = $${paramIndex++}`);
       values.push(estado_flujo);
+
+      // --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+      // Si el estado es 'Listo', también actualiza 'fecha_listo'
+      if (estado_flujo === 'Listo') {
+        fields.push(`fecha_listo = NOW()`);
+      } 
+      // Si el estado es 'Entregado', también actualiza 'fecha_entrega'
+      else if (estado_flujo === 'Entregado') {
+        fields.push(`fecha_entrega = NOW()`);
+      }
+      // --- FIN DE LA CORRECCIÓN ---
     }
+
     if (estado_pago) {
       fields.push(`estado_pago = $${paramIndex++}`);
       values.push(estado_pago);
     }
 
-    // Añadimos el 'folio' al final para el WHERE
     values.push(folio);
     const query = `
       UPDATE Pedidos 
       SET ${fields.join(', ')} 
       WHERE folio = $${paramIndex} 
-      RETURNING *`; // RETURNING * nos devuelve el pedido actualizado
+      RETURNING *`;
 
-    // 4. Ejecutamos la actualización
     const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
@@ -120,11 +124,8 @@ export const actualizarEstadoPedido = async (req, res) => {
     const pedidoActualizado = result.rows[0];
     let mensajeRespuesta = 'Pedido actualizado exitosamente';
 
-    // --- PASO 2.6: LÓGICA DE LEALTAD ---
-    // 5. Verificamos si debemos actualizar la lealtad
+    // Lógica de Lealtad (esta se queda igual)
     if (pedidoActualizado.estado_flujo === 'Entregado' && pedidoActualizado.estado_pago === 'Pagado') {
-      
-      // Usamos el cliente_id del pedido que acabamos de actualizar
       await pool.query(
         'UPDATE Clientes SET contador_servicios = contador_servicios + 1 WHERE id = $1',
         [pedidoActualizado.cliente_id]
@@ -132,7 +133,6 @@ export const actualizarEstadoPedido = async (req, res) => {
       mensajeRespuesta = 'Pedido actualizado y 1 punto de lealtad sumado al cliente';
     }
 
-    // 6. Respondemos con éxito
     res.status(200).json({
       message: mensajeRespuesta,
       pedido: pedidoActualizado

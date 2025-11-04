@@ -11,7 +11,7 @@ export const crearCliente = async (req, res) => {
       return res.status(400).json({ message: 'El nombre y el teléfono son requeridos' });
     }
 
-    // 3. Guardar en la Base de Datos (Neon)
+    // 3. Guardar en la Base de Datos 
     // El 'contador_servicios' usará el valor por defecto (0)
     const nuevoCliente = await pool.query(
       'INSERT INTO clientes (nombre, telefono, direccion) VALUES ($1, $2, $3) RETURNING *',

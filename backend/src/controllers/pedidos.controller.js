@@ -1,23 +1,22 @@
 // backend/src/controllers/pedidos.controller.js
 import pool from '../config/db.config.js';
 
-// Constante de precio de domicilio (la definimos aquí)
+// --- ¡NUEVAS CONSTANTES DE NEGOCIO! ---
+const PRECIO_POR_KG = 15;
 const TARIFA_DOMICILIO_FIJA = 30;
+const MAX_KG_GRATIS = 10; // El descuento se aplica hasta 10kg
+const PUNTOS_PARA_GRATIS = 9; // El 10º pedido (índice 9) es gratis
 
 /**
  * 1. Obtiene pedidos ACTIVOS para el Dashboard
  */
 export const getPedidosDashboard = async (req, res) => {
+  // ... (Esta función se queda igual)
   try {
     const pedidosActivos = await pool.query(
       `SELECT 
-         p.folio, 
-         p.precio_total, 
-         p.estado_flujo, 
-         p.estado_pago, 
-         p.fecha_creacion,
-         p.es_domicilio,
-         c.nombre AS nombre_cliente,
+         p.folio, p.precio_total, p.estado_flujo, p.estado_pago, 
+         p.fecha_creacion, p.es_domicilio, c.nombre AS nombre_cliente,
          c.telefono AS telefono_cliente
        FROM pedidos p
        JOIN clientes c ON p.cliente_id = c.id
@@ -33,19 +32,15 @@ export const getPedidosDashboard = async (req, res) => {
 
 /**
  * 2. Crea un nuevo pedido.
- * ¡MODIFICADO para aceptar estado_pago!
+ * ¡TOTALMENTE REESCRITO para manejar la lógica de precios!
  */
 export const crearPedido = async (req, res) => {
   try {
-    // --- ¡CAMBIO AQUÍ! ---
-    // Leemos 'estado_pago' del body. Si no viene, es 'Pendiente'.
-    let { cliente_id, precio_servicio, tarifa_domicilio = 0, estado_pago = 'Pendiente' } = req.body;
+    // --- ¡CAMBIO! Recibimos 'kilos' en lugar de 'precio_servicio' ---
+    const { cliente_id, kilos, es_domicilio, estado_pago = 'Pendiente' } = req.body;
 
-    if (!cliente_id || !precio_servicio) {
-      // El precio 0 está bien (para pedidos gratis), pero no debe ser nulo
-      if (precio_servicio === null || precio_servicio === undefined) {
-         return res.status(400).json({ message: 'El cliente_id y el precio_servicio son requeridos' });
-      }
+    if (!cliente_id || !kilos) {
+      return res.status(400).json({ message: 'El cliente_id y los kilos son requeridos' });
     }
 
     const clienteResult = await pool.query(
@@ -58,11 +53,25 @@ export const crearPedido = async (req, res) => {
     }
 
     const cliente = clienteResult.rows[0];
-    const esPedidoGratis = cliente.contador_servicios >= 9;
+    const esPedidoGratis = cliente.contador_servicios >= PUNTOS_PARA_GRATIS;
     
+    let precio_servicio = 0;
+    let mensajeRespuesta = 'Pedido creado exitosamente';
+
     if (esPedidoGratis) {
-      console.log(`¡Pedido gratis aplicado para el cliente ${cliente_id}!`);
-      precio_servicio = 0; 
+      // --- ¡NUEVA LÓGICA DE 10KG MÁXIMO! ---
+      if (kilos <= MAX_KG_GRATIS) {
+        // 1. Pedido de 10kg o menos: El servicio es 100% gratis
+        precio_servicio = 0;
+        mensajeRespuesta = `¡Pedido gratis (hasta ${MAX_KG_GRATIS}kg) aplicado!`;
+      } else {
+        // 2. Pedido de más de 10kg: Se cobran los kilos excedentes
+        const kilos_excedentes = kilos - MAX_KG_GRATIS;
+        precio_servicio = kilos_excedentes * PRECIO_POR_KG;
+        mensajeRespuesta = `¡Descuento de ${MAX_KG_GRATIS}kg gratis aplicado! Se cobran ${kilos_excedentes}kg excedentes.`;
+      }
+      
+      // Reseteamos el contador y sumamos al historial de gratis
       await pool.query(
         `UPDATE clientes 
          SET contador_servicios = 0, 
@@ -70,12 +79,15 @@ export const crearPedido = async (req, res) => {
          WHERE id = $1`,
         [cliente_id]
       );
+    } else {
+      // Pedido normal, se cobra completo
+      precio_servicio = kilos * PRECIO_POR_KG;
     }
+    // --- FIN DE LA LÓGICA ---
 
-    const es_domicilio = Number(tarifa_domicilio) > 0;
+    // Calculamos la tarifa de domicilio
+    const tarifa_domicilio = es_domicilio ? TARIFA_DOMICILIO_FIJA : 0;
 
-    // --- ¡CAMBIO AQUÍ! ---
-    // Añadimos 'estado_pago' a la consulta INSERT
     const nuevoPedido = await pool.query(
       `INSERT INTO pedidos (cliente_id, precio_servicio, tarifa_domicilio, es_domicilio, estado_pago) 
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
@@ -83,7 +95,7 @@ export const crearPedido = async (req, res) => {
     );
 
     res.status(201).json({
-      message: esPedidoGratis ? '¡Pedido gratis aplicado exitosamente!' : 'Pedido creado exitosamente',
+      message: mensajeRespuesta,
       pedido: nuevoPedido.rows[0]
     });
 

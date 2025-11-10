@@ -1,11 +1,28 @@
 // backend/src/controllers/pedidos.controller.js
 import pool from '../config/db.config.js';
 
-// Constante de precio de domicilio (la definimos aquí)
-const PRECIO_POR_KG = 15;
-const TARIFA_DOMICILIO_FIJA = 30;
+// --- CONSTANTES DE NEGOCIO ---
+const PRECIO_POR_KG = 18;
+const TARIFA_DOMICILIO_FIJA = 20;
 const MAX_KG_GRATIS = 10;
-const PUNTOS_PARA_GRATIS = 9; 
+const PUNTOS_PARA_GRATIS = 9;
+
+// --- FUNCIÓN HELPER PARA EL FOLIO ---
+function generarNumeroPedido(cliente, es_domicilio, pedidosTotales) {
+  const D_R = es_domicilio ? 'D' : 'R';
+  const nombreSplit = cliente.nombre.split(' ');
+  const inicialNombre = nombreSplit[0].charAt(0).toUpperCase();
+  const inicialApellido = nombreSplit.length > 1 ? nombreSplit[nombreSplit.length - 1].charAt(0).toUpperCase() : 'X';
+  const now = new Date();
+  const dia = String(now.getDate()).padStart(2, '0');
+  const mes = String(now.getMonth() + 1).padStart(2, '0');
+  const ano = now.getFullYear();
+  const fechaStr = `${dia}${mes}${ano}`;
+  return `${D_R}${inicialNombre}${inicialApellido}${fechaStr}${pedidosTotales + 1}`;
+}
+// --- FIN HELPER ---
+
+
 /**
  * 1. Obtiene pedidos ACTIVOS para el Dashboard
  */
@@ -13,13 +30,9 @@ export const getPedidosDashboard = async (req, res) => {
   try {
     const pedidosActivos = await pool.query(
       `SELECT 
-         p.folio, 
-         p.precio_total, 
-         p.estado_flujo, 
-         p.estado_pago, 
-         p.fecha_creacion,
-         p.es_domicilio,
-         c.nombre AS nombre_cliente,
+         p.folio, p.numero_pedido, p.precio_total, p.precio_servicio, 
+         p.tarifa_domicilio, p.kilos, p.estado_flujo, p.estado_pago, 
+         p.fecha_creacion, p.es_domicilio, c.nombre AS nombre_cliente,
          c.telefono AS telefono_cliente
        FROM pedidos p
        JOIN clientes c ON p.cliente_id = c.id
@@ -34,19 +47,20 @@ export const getPedidosDashboard = async (req, res) => {
 };
 
 /**
- * 2. Crea un nuevo pedido.
- * ¡MODIFICADO para aceptar estado_pago!
- */export const crearPedido = async (req, res) => {
+ * 2. Crea un nuevo pedido
+ * ¡LÓGICA DE LEALTAD CORREGIDA!
+ */
+export const crearPedido = async (req, res) => {
   try {
-    // --- ¡CAMBIO! Recibimos 'kilos' en lugar de 'precio_servicio' ---
     const { cliente_id, kilos, es_domicilio, estado_pago = 'Pendiente' } = req.body;
 
-    if (!cliente_id || !kilos) {
+    if (!cliente_id || kilos === undefined || kilos === null) {
       return res.status(400).json({ message: 'El cliente_id y los kilos son requeridos' });
     }
 
+    // --- ¡CORRECCIÓN! Usa 'contador_lealtad' ---
     const clienteResult = await pool.query(
-      'SELECT contador_servicios FROM clientes WHERE id = $1',
+      'SELECT nombre, contador_lealtad, pedidos_totales FROM clientes WHERE id = $1',
       [cliente_id]
     );
 
@@ -55,45 +69,51 @@ export const getPedidosDashboard = async (req, res) => {
     }
 
     const cliente = clienteResult.rows[0];
-    const esPedidoGratis = cliente.contador_servicios >= PUNTOS_PARA_GRATIS;
+    // --- ¡CORRECCIÓN! Usa 'contador_lealtad' ---
+    const esPedidoGratis = cliente.contador_lealtad >= PUNTOS_PARA_GRATIS;
     
     let precio_servicio = 0;
     let mensajeRespuesta = 'Pedido creado exitosamente';
 
     if (esPedidoGratis) {
-      // --- ¡NUEVA LÓGICA DE 10KG MÁXIMO! ---
+      // --- LÓGICA DE PEDIDO GRATIS ---
       if (kilos <= MAX_KG_GRATIS) {
-        // 1. Pedido de 10kg o menos: El servicio es 100% gratis
         precio_servicio = 0;
         mensajeRespuesta = `¡Pedido gratis (hasta ${MAX_KG_GRATIS}kg) aplicado!`;
       } else {
-        // 2. Pedido de más de 10kg: Se cobran los kilos excedentes
         const kilos_excedentes = kilos - MAX_KG_GRATIS;
         precio_servicio = kilos_excedentes * PRECIO_POR_KG;
         mensajeRespuesta = `¡Descuento de ${MAX_KG_GRATIS}kg gratis aplicado! Se cobran ${kilos_excedentes}kg excedentes.`;
       }
       
-      // Reseteamos el contador y sumamos al historial de gratis
+      // --- ¡CORRECCIÓN! Usa 'contador_lealtad' ---
       await pool.query(
         `UPDATE clientes 
-         SET contador_servicios = 0, 
+         SET contador_lealtad = 0, 
              pedidos_gratis_contador = pedidos_gratis_contador + 1 
          WHERE id = $1`,
         [cliente_id]
       );
     } else {
-      // Pedido normal, se cobra completo
+      // --- LÓGICA DE PEDIDO NORMAL (SUMA PUNTOS) ---
       precio_servicio = kilos * PRECIO_POR_KG;
+      // --- ¡CORRECCIÓN! Usa 'contador_lealtad' ---
+      await pool.query(
+        `UPDATE clientes 
+         SET contador_lealtad = contador_lealtad + 1,
+             pedidos_totales = pedidos_totales + 1
+         WHERE id = $1`,
+        [cliente_id]
+      );
     }
-    // --- FIN DE LA LÓGICA ---
 
-    // Calculamos la tarifa de domicilio
     const tarifa_domicilio = es_domicilio ? TARIFA_DOMICILIO_FIJA : 0;
+    const numero_pedido = generarNumeroPedido(cliente, es_domicilio, cliente.pedidos_totales);
 
     const nuevoPedido = await pool.query(
-      `INSERT INTO pedidos (cliente_id, precio_servicio, tarifa_domicilio, es_domicilio, estado_pago) 
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [cliente_id, precio_servicio, tarifa_domicilio, es_domicilio, estado_pago]
+      `INSERT INTO pedidos (cliente_id, precio_servicio, tarifa_domicilio, es_domicilio, estado_pago, numero_pedido, kilos) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [cliente_id, precio_servicio, tarifa_domicilio, es_domicilio, estado_pago, numero_pedido, kilos]
     );
 
     res.status(201).json({
@@ -109,17 +129,50 @@ export const getPedidosDashboard = async (req, res) => {
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
+
 /**
- * 3. Actualiza el estado de un pedido (Listo, Entregado, Cancelado)
+ * 3. Actualiza el estado de un pedido
+ * ¡LÓGICA DE CANCELACIÓN CORREGIDA!
  */
 export const actualizarEstadoPedido = async (req, res) => {
-  // ... (Tu función se queda igual)
   try {
     const { folio } = req.params;
     const { estado_flujo, estado_pago } = req.body;
 
     if (!estado_flujo && !estado_pago) {
       return res.status(400).json({ message: 'Se requiere al menos un estado para actualizar' });
+    }
+    
+    if (estado_flujo === 'Cancelado') {
+      const pedidoResult = await pool.query('SELECT * FROM pedidos WHERE folio = $1', [folio]);
+      if (pedidoResult.rows.length === 0) {
+        return res.status(404).json({ message: 'Pedido no encontrado' });
+      }
+      const pedido = pedidoResult.rows[0];
+
+      if (pedido.estado_flujo === 'En Proceso' || pedido.estado_flujo === 'Listo') {
+        const fuePedidoGratis = (pedido.precio_servicio === 0 && pedido.kilos > 0);
+
+        if (fuePedidoGratis) {
+          // --- ¡CORRECCIÓN! Usa 'contador_lealtad' ---
+          await pool.query(
+            `UPDATE clientes 
+             SET contador_lealtad = $1, 
+                 pedidos_gratis_contador = pedidos_gratis_contador - 1
+             WHERE id = $2`,
+            [PUNTOS_PARA_GRATIS, pedido.cliente_id]
+          );
+        } else {
+          // --- ¡CORRECCIÓN! Usa 'contador_lealtad' ---
+          await pool.query(
+            `UPDATE clientes 
+             SET contador_lealtad = contador_lealtad - 1,
+                 pedidos_totales = pedidos_totales - 1
+             WHERE id = $1 AND contador_lealtad > 0`,
+            [pedido.cliente_id]
+          );
+        }
+      }
     }
 
     const fields = [];
@@ -154,20 +207,9 @@ export const actualizarEstadoPedido = async (req, res) => {
       return res.status(404).json({ message: 'Pedido no encontrado' });
     }
 
-    const pedidoActualizado = result.rows[0];
-    let mensajeRespuesta = 'Pedido actualizado exitosamente';
-
-    if (pedidoActualizado.estado_flujo === 'Entregado' && pedidoActualizado.estado_pago === 'Pagado') {
-      await pool.query(
-        'UPDATE clientes SET contador_servicios = contador_servicios + 1 WHERE id = $1',
-        [pedidoActualizado.cliente_id]
-      );
-      mensajeRespuesta = 'Pedido actualizado y 1 punto de lealtad sumado al cliente';
-    }
-
     res.status(200).json({
-      message: mensajeRespuesta,
-      pedido: pedidoActualizado
+      message: 'Pedido actualizado exitosamente',
+      pedido: result.rows[0]
     });
 
   } catch (error) {
@@ -180,7 +222,6 @@ export const actualizarEstadoPedido = async (req, res) => {
  * 4. Obtiene TODOS los pedidos para el Historial
  */
 export const getHistorialPedidos = async (req, res) => {
-  // ... (Tu función se queda igual) ...
   try {
     const { rango } = req.query;
     let sqlFiltroFecha = ""; 
@@ -191,10 +232,10 @@ export const getHistorialPedidos = async (req, res) => {
 
     const pedidosHistorial = await pool.query(
       `SELECT 
-         p.folio, p.precio_servicio, p.tarifa_domicilio, p.precio_total,
+         p.folio, p.numero_pedido, p.precio_servicio, p.tarifa_domicilio, p.precio_total,
          p.estado_flujo, p.estado_pago, p.fecha_creacion, p.fecha_listo,
-         p.fecha_entrega, p.es_domicilio, c.nombre AS nombre_cliente,
-         c.telefono AS telefono_cliente
+         p.fecha_entrega, p.es_domicilio, p.kilos,
+         c.nombre AS nombre_cliente, c.telefono AS telefono_cliente
        FROM pedidos p
        JOIN clientes c ON p.cliente_id = c.id
        ${sqlFiltroFecha}
@@ -218,10 +259,9 @@ export const getHistorialPedidos = async (req, res) => {
 };
 
 /**
- * 5. Agrega o quita el servicio a domicilio de un pedido.
+ * 5. Agrega o quita el servicio a domicilio
  */
 export const toggleDomicilio = async (req, res) => {
-  // ... (Tu función se queda igual) ...
   try {
     const { folio } = req.params;
     const { es_domicilio } = req.body; 

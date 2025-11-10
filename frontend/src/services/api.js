@@ -1,10 +1,16 @@
 // frontend/src/services/api.js
 
-const API_URL = 'https://maycleanpos.onrender.com/api'; // Tu URL de Render
+// --- ¡ESTA ES LA LÓGICA CLAVE! ---
+// 1. Define tus dos URLs de backend
+const LOCAL_API_URL = 'http://localhost:4321/api'; // Tu backend local
+const PRODUCTION_API_URL = 'https://maycleanpos.onrender.com/api'; // Tu backend de Render
 
-/**
- * Función de Login
- */
+// 2. Comprueba en qué dominio está corriendo el frontend
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// 3. Elige la URL correcta
+const API_URL = isLocal ? LOCAL_API_URL : PRODUCTION_API_URL;
+
 export const login = async (email, password) => {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
@@ -26,7 +32,7 @@ export const getDashboardPedidos = async (token) => {
     cache: 'no-cache',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` 
+      'Authorization': `Bearer ${token}`
     }
   });
   const data = await response.json();
@@ -105,7 +111,7 @@ export const getClientes = async (token) => {
   const response = await fetch(`${API_URL}/clientes`, {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` 
+      'Authorization': `Bearer ${token}`
     }
   });
   const data = await response.json();
@@ -158,7 +164,7 @@ export const getHistorialPedidos = async (token, rangoFecha = '') => {
     cache: 'no-cache',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` 
+      'Authorization': `Bearer ${token}`
     }
   });
   const data = await response.json();
@@ -166,12 +172,8 @@ export const getHistorialPedidos = async (token, rangoFecha = '') => {
   return data;
 };
 
-// --- ¡NUEVA FUNCIÓN! ---
 /**
  * 9. Agrega o quita el servicio a domicilio
- * @param {string} folio - El UUID del pedido
- * @param {boolean} esDomicilio - true para agregar, false para quitar
- * @param {string} token - El token JWT
  */
 export const toggleDomicilio = async (folio, esDomicilio, token) => {
   const response = await fetch(`${API_URL}/pedidos/${folio}/domicilio`, {
@@ -184,5 +186,5 @@ export const toggleDomicilio = async (folio, esDomicilio, token) => {
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.message || 'Error al actualizar domicilio');
-  return data; // Retorna { message, pedido }
+  return data;
 };

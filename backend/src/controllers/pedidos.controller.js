@@ -33,7 +33,8 @@ export const getPedidosDashboard = async (req, res) => {
          p.folio, p.numero_pedido, p.precio_total, p.precio_servicio, 
          p.tarifa_domicilio, p.kilos, p.estado_flujo, p.estado_pago, 
          p.fecha_creacion, p.es_domicilio, c.nombre AS nombre_cliente,
-         c.telefono AS telefono_cliente
+         c.telefono AS telefono_cliente,
+         c.direccion AS direccion_cliente
        FROM pedidos p
        JOIN clientes c ON p.cliente_id = c.id
        WHERE p.estado_flujo IN ('En Proceso', 'Listo')
